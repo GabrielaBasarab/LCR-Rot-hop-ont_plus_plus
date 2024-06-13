@@ -61,8 +61,8 @@ class HyperOptManager:
             hp.choice('weight_decay', [0.00001, 0.0001, 0.001, 0.01, 0.1]),
             hp.choice('lcr_hops', [3]), 
     ##change gamma
-           hp.choice('gamma', [0]) #only for the bechamark where both is None
-           #hp.quniform('gamma', -1.5, 1.5, 0.1)
+           #hp.choice('gamma', [0]) #only for the bechamark where both is None
+           hp.quniform('gamma', -1.5, 1.5, 0.1)
         ]
 
         best = fmin(self.objective, space=space, algo=tpe.suggest, trials=self.trials, show_progressbar=False)

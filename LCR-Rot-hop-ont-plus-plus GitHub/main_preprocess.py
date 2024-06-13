@@ -106,10 +106,10 @@ def load_ontology():
 def main():
     # parse CLI args
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument("--year", default=2015, type=int, help="The year of the dataset (2015 or 2016)")
-    parser.add_argument("--phase", default="Train", help="The phase of the dataset (Train or Test)")
+    parser.add_argument("--year", default=2016, type=int, help="The year of the dataset (2015 or 2016)")
+    parser.add_argument("--phase", default="Test", help="The phase of the dataset (Train or Test)")
     #NONE = benchmark
-    parser.add_argument("--ont-hops", default=1, type=int, required=False,
+    parser.add_argument("--ont-hops", default=2, type=int, required=False,
                         help="The number of hops in the ontology to use")
     parser.add_argument("--vm", default=True, type=bool, action=argparse.BooleanOptionalAction,
                         help="Whether to use the visible matrix")
