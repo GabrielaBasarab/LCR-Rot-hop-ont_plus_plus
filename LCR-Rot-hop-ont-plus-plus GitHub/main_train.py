@@ -29,7 +29,7 @@ def main():
     parser.add_argument("--ont-hops", default= None, type=int, required=False,
                         help="The number of hops in the ontology to use")
 #change hops for testing
-    parser.add_argument("--val-ont-hops", default=None, type=int, required=False,
+    parser.add_argument("--val-ont-hops", default=2, type=int, required=False,
                         help="The number of hops to use in the validation phase, this option overrides the --ont-hops option.")
     args = parser.parse_args()
 
@@ -41,10 +41,10 @@ def main():
 
 
     # Specify parameters
-    learning_rate = 0.02
-    dropout_rate = 0.4
-    momentum =  0.95
-    weight_decay = 0.01
+    learning_rate = 0.05
+    dropout_rate = 0.3
+    momentum =  0.9
+    weight_decay = 0.0001
     n_epochs = 100
     batch_size = 32
 

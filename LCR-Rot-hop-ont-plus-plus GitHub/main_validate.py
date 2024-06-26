@@ -76,11 +76,11 @@ def main():
     parser.add_argument("--year", default=2016, type=int, help="The year of the dataset (2015 or 2016)")
     #default is None
     #the default refers to the numumber of hops only at testing
-    parser.add_argument("--ont-hops", default=None, type=int, required=False, help="The number of hops in the ontology")
+    parser.add_argument("--ont-hops", default=2, type=int, required=False, help="The number of hops in the ontology")
     parser.add_argument("--hops", default=3, type=int,
                         help="The number of hops to use in the rotatory attention mechanism")
     #default is None
-    parser.add_argument("--gamma", default= 1.5, type=float, required=False,
+    parser.add_argument("--gamma", default= 0.7, type=float, required=False,
                         help="The value of gamma for the LCRRotHopPlusPlus model")
     parser.add_argument("--vm", default=True, type=bool, action=argparse.BooleanOptionalAction,
                         help="Whether to use the visible matrix")
