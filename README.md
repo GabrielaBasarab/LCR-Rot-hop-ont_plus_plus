@@ -1,35 +1,31 @@
-# Knowledge injection into the LCR-Rot-hop(-ont)++ model for ABSC
-This code allows to investigate the effect of knowledge injection on ABSC. Specifically, it injects knowledge from a restaurant domain ontology into the state-of-the-art LCR-Rot-hop++ model, called LCR-Rot-hop-ont++. In our research, we investigated different knowledge injection regimes: (1) training, (2) testing, and (3) testing and training. Moreover, we tried to optimize the amount of knowledge to be 
+# Knowledge injection into the LCR-Rot-hop(-ont)++ Model for ABSC
+This code enables the investigation of the effects of knowledge injection on Aspect-Based Sentiment Classification (ABSC). Specifically, it incorporates knowledge from a restaurant domain ontology into the state-of-the-art LCR-Rot-hop++ model, referred to as LCR-Rot-hop-ont++. Our research explores different regimes of knowledge injection: (1) during training, (2) during testing, and (3) during both training and testing. Additionally, we aim to identify the optimal amount of knowledge to be injected by experimenting with various hops through the ontology. A detailed guide for using the code is provided below.
 
-
-
-
-
-This code can be used to train and validate LCR-Rot-hop(-ont)++ models. The model is a neural network used for Aspect-Based Sentiment Classification and
-allows for injection knowledge from an Ontology. 
-
-## Before running the code
-- Set up environment:
+## Setting up the programming environment 
   - Create a conda environment with Python 3.10
-  - run `pip install -r requirements.txt` in your terminal 
-- Set up data
-  - the data and ontologies can be found at `data/raw`  
-  - for simplicity the SemEval 2014 laptop dataset is named "ABSA14_Restaurants_...."
-
-## Training and validating process
-Note that this process works for the 2015 and 2016 dataset, in the case of the 2014 datasets some adaptations have to be made to the code. These adaptations are explained below. 
-
-- Step 1: Run main_preprocess.py, adapt the year and the amount of ontology hops used as needed.
+  - Run `pip install -r requirements.txt` in your terminal to download all necessary packages
+  - Find the unprocessed SemEval-2015 and SemEval-2016 datasets for restaurant reviews and the domain ontology under `data/raw`  
+ ``   
+## LCR-Rot-hop-ont++ Model Implementation
+**Step 1**: Create the contextual word embeddings to be used in the model by running `main_preprocess.py`.
+           - The data is first cleaned of implicit targets as they are not compatible with the model
+           - Create the necessary embeddings by specifying the year, phase (Train or Test), and number of hops through the ontology in `def main()`.
+           - If you would like to do an ablation experiment (the effect of excluding soft positioning and/or the visibility matrix), set the default in line 117 to true. Notice that currently this is only set up for the testing regime.
+      
+- Run main_preprocess.py, adapt the year and the amount of ontology hops used as needed.
+  
 - Step 2: Run main_hyperparam.py, this code optimizes the hyperparameters and must be run for every specific task before training. Adapt the year and the amount of ontology hops 
           used  as needed (note specify the ontology hops used during training in line 80).
 - Step 3: Run main_train.py, use the hyperparameters of the previous step and adapt the year and the amount of ontology hops used as needed.
 - Step 4: Run main_validate.py, specify the --model "MODEL_PATH" when running and adapt the year and the amount of ontology hops used as needed. This code will provide the results 
-          for  the performance of the model as output. 
-
+          for  the performance of the model as output.
+  
+## Optional Files
 
 ## References for the data
-- 
-
+- Schouten, K., Frˇasincar, F., and de Jong, F. (2017). Ontology-enhanced aspect-based sentiment analysis. In 17th International Conference on Web Engineering (ICWE 2017), volume 10360 of LNCS, pages 302–320. Springer.
+- Pontiki, M., Galanis, D., Papageorgiou, H., Androutsopoulos, I., Manandhar, S., Al-Smadi, M., Al-Ayyoub, M., Zhao, Y., Qin, B., De Clercq, O., et al. (2016). Semeval-2016 task 5: Aspect based sentiment analysis. In 10th International Workshop on Semantic Evaluation (SemEval2016), pages 19–30. ACL.
+- Pontiki, M., Galanis, D., Papageorgiou, H., Manandhar, S., and Androutsopoulos, I. (2015). Semeval-2015 task 12: Aspect-based sentiment analysis. In 9th International Workshop on Semantic Evaluation (SemEval 2015), pages 486–495. ACL.
 
 ## References for the code
 - https://github.com/charlottevisser/LCR-Rot-hop-ont-plus-plus 
