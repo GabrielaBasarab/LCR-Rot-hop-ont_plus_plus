@@ -1,4 +1,3 @@
-import argparse
 import json
 import os
 import pickle
@@ -16,7 +15,7 @@ from utils import EmbeddingsDataset, train_validation_split
 class HyperOptManager:
     """A class that performs hyperparameter optimization and stores the best states as checkpoints."""
 
-    def __init__(self, year: int, val_ont_hops: Optional[int], ont_hops: Optional[int], max_evals: int = 100):
+    def __init__(self, year: int, val_ont_hops: Optional[int], ont_hops: Optional[int], max_evals: int = 150):
         self.year = year
         self.n_epochs = 20
         self.val_ont_hops = val_ont_hops
@@ -24,6 +23,7 @@ class HyperOptManager:
         self.max_evals = max_evals
 
         self.eval_num = 0
+        self.no_improvement_count = 0
         self.best_loss = None
         self.best_hyperparams = None
         self.best_state_dict = None
@@ -142,7 +142,7 @@ class HyperOptManager:
 
             print(f"Epoch {epoch+1}/{self.n_epochs} - Validation Accuracy: {validation_accuracy:.3f}")
 
-        print(f"Best Test Acc.: {best_accuracy:.3f}, Evaluation {self.eval_num}")
+        print(f"Best Test Acc.: {best_accuracy:.3f}, Evaluation {self.eval_num}, no improvement count: {self.no_improvement_count}")
 
         objective_loss = -best_accuracy
         self.update_best_accuracy(best_accuracy)
@@ -157,6 +157,9 @@ class HyperOptManager:
     def update_best_accuracy(self, current_best_accuracy):
         if self.best_global_accuracy is None or current_best_accuracy > self.best_global_accuracy:
             self.best_global_accuracy = current_best_accuracy
+            self.no_improvement_count = 0
+        else:
+            self.no_improvement_count += 1
 
     def check_best_loss(self, loss: float, hyperparams, state_dict: tuple[dict, dict]):
         if self.best_loss is None or loss < self.best_loss:
