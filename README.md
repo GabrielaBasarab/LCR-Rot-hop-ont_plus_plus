@@ -8,14 +8,17 @@ This code enables the investigation of the effects of knowledge injection on Asp
  ``   
 ## LCR-Rot-hop-ont++ Model Implementation
 **Step 1**: Create the contextual word embeddings to be used in the model by running `main_preprocess.py`.
-           - The data is first cleaned of implicit targets as they are not compatible with the model
-           - Create the necessary embeddings by specifying the year, phase (Train or Test), and number of hops through the ontology in `def main()`.
-           - If you would like to do an ablation experiment (the effect of excluding soft positioning and/or the visibility matrix), set the default in line 117 to true. Notice that currently this is only set up for the testing regime.
-      
-- Run main_preprocess.py, adapt the year and the amount of ontology hops used as needed.
+- The data is first cleaned of implicit targets as they are not compatible with the model
+- Create the necessary embeddings by specifying the year, phase (Train or Test), and number of hops through the ontology in `def main()`.
+-  If you would like to do an ablation experiment (the effect of excluding soft positioning and/or the visibility matrix), set the default in line 117 to true. Notice that currently this is only set up for the testing regime.
+
+**Step 2**: 
   
 - Step 2: Run main_hyperparam.py, this code optimizes the hyperparameters and must be run for every specific task before training. Adapt the year and the amount of ontology hops 
           used  as needed (note specify the ontology hops used during training in line 80).
+
+
+  
 - Step 3: Run main_train.py, use the hyperparameters of the previous step and adapt the year and the amount of ontology hops used as needed.
 - Step 4: Run main_validate.py, specify the --model "MODEL_PATH" when running and adapt the year and the amount of ontology hops used as needed. This code will provide the results 
           for  the performance of the model as output.
