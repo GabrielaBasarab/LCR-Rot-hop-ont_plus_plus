@@ -28,6 +28,7 @@ class HyperOptManager:
         self.best_hyperparams = None
         self.best_state_dict = None
         self.trials = Trials()
+        self.no_improvement_count = 0
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else
                                    'mps' if torch.backends.mps.is_available() else 'cpu')
@@ -53,39 +54,33 @@ class HyperOptManager:
             print("Starting from scratch")
 
     def run(self):
-        # TODO: convert to dict for better readability in json file?
         space = [
             hp.choice('learning_rate', [0.005, 0.001, 0.01, 0.02, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]),
             hp.quniform('dropout_rate', 0.25, 0.75, 0.1),
             hp.choice('momentum', [0.85, 0.9, 0.95, 0.99]),
             hp.choice('weight_decay', [0.00001, 0.0001, 0.001, 0.01, 0.1]),
-            hp.choice('lcr_hops', [3]), 
-            ##set gamma to 0 if no knowledge is injected.
-            #hp.choice('gamma', [0])
+            hp.choice('lcr_hops', [3]),
             hp.quniform('gamma', -1.5, 1.5, 0.1)
+            ##if no knowledge is injected
+            ## hp.choice('gamma', [0]),
         ]
 
         best = fmin(self.objective, space=space, algo=tpe.suggest, trials=self.trials, show_progressbar=False)
 
-    # in case of ont in train extra if statement for correct embedingsdataset adapt ont_hops etc.
     def objective(self, hyperparams):
         self.eval_num += 1
         learning_rate, dropout_rate, momentum, weight_decay, lcr_hops, gamma = hyperparams
-        print(f"\n\nEval {self.eval_num} with hyperparams {hyperparams}")
 
         # create training and validation DataLoader
         train_dataset = EmbeddingsDataset(year=self.year, device=self.device, phase="Train")
-        print(f"Using {train_dataset} with {len(train_dataset)} obs for training")
         train_idx, validation_idx = train_validation_split(train_dataset)
-#Amount of hops used at training
+
         ont_hops = None
 
         training_subset: Subset
         if ont_hops is not None:
-            train_ont_dataset = EmbeddingsDataset(year=self.year, device=self.device, phase="Train",
-                                                  ont_hops=ont_hops)
+            train_ont_dataset = EmbeddingsDataset(year=self.year, device=self.device, phase="Train", ont_hops=ont_hops)
             training_subset = Subset(train_ont_dataset, train_idx)
-            print(f"Using {train_ont_dataset} with {len(training_subset)} obs for training")
         else:
             training_subset = Subset(train_dataset, train_idx)
 
@@ -94,32 +89,28 @@ class HyperOptManager:
             train_val_dataset = EmbeddingsDataset(year=self.year, device=self.device, phase="Train",
                                                   ont_hops=self.val_ont_hops)
             validation_subset = Subset(train_val_dataset, validation_idx)
-            print(f"Using {train_val_dataset} with {len(validation_subset)} obs for validation")
         else:
             validation_subset = Subset(train_dataset, validation_idx)
-            print(f"Using {train_dataset} with {len(validation_subset)} obs for validation")
+
         training_loader = DataLoader(training_subset, batch_size=32, collate_fn=lambda batch: batch)
         validation_loader = DataLoader(validation_subset, collate_fn=lambda batch: batch)
 
         # Train model
-        model = LCRRotHopPlusPlus(hops=lcr_hops, dropout_prob=dropout_rate, gamma = gamma).to(self.device)
+        model = LCRRotHopPlusPlus(hops=lcr_hops, dropout_prob=dropout_rate, gamma=gamma).to(self.device)
         criterion = nn.CrossEntropyLoss()
         optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum, weight_decay=weight_decay)
 
         best_accuracy: Optional[float] = None
         best_state_dict: Optional[tuple[dict, dict]] = None
-        epochs_progress = tqdm(range(self.n_epochs), unit='epoch')
 
-        for epoch in epochs_progress:
-            epoch_progress = tqdm(training_loader, unit='batch', leave=False)
+        for epoch in range(self.n_epochs):
             model.train()
-
             train_loss = 0.0
             train_n_correct = 0
             train_steps = 0
             train_n = 0
 
-            for i, batch in enumerate(epoch_progress):
+            for i, batch in enumerate(training_loader):
                 torch.set_default_device(self.device)
 
                 batch_outputs = torch.stack(
@@ -133,9 +124,6 @@ class HyperOptManager:
                 train_n_correct += (batch_outputs.argmax(1) == batch_labels).type(torch.int).sum().item()
                 train_n += len(batch)
 
-                epoch_progress.set_description(
-                    f"Train Loss: {train_loss / train_steps:.3f}, Train Acc.: {train_n_correct / train_n:.3f}")
-
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
@@ -143,14 +131,13 @@ class HyperOptManager:
                 torch.set_default_device('cpu')
 
             # Validation loss
-            epoch_progress = tqdm(validation_loader, unit='obs', leave=False)
             model.eval()
 
             val_loss = 0.0
             val_steps = 0
             val_n = 0
             val_n_correct = 0
-            for i, data in enumerate(epoch_progress):
+            for i, data in enumerate(validation_loader):
                 torch.set_default_device(self.device)
 
                 with torch.inference_mode():
@@ -164,24 +151,27 @@ class HyperOptManager:
                     val_loss += loss.item()
                     val_steps += 1
 
-                    epoch_progress.set_description(
-                        f"Test Loss: {val_loss / val_steps:.3f}, Test Acc.: {val_n_correct / val_n:.3f}")
-
                 torch.set_default_device('cpu')
 
             validation_accuracy = val_n_correct / val_n
+            print(f"Epoch {epoch + 1}: Validation Accuracy: {validation_accuracy:.3f}")
 
             if best_accuracy is None or validation_accuracy > best_accuracy:
-                epochs_progress.set_description(f"Best Test Acc.: {validation_accuracy:.3f}")
                 best_accuracy = validation_accuracy
                 best_state_dict = (model.state_dict(), optimizer.state_dict())
+                self.no_improvement_count = 0
+            else:
+                self.no_improvement_count += 1
+
+        print(f"Best Validation Accuracy: {best_accuracy:.3f}")
+        print(f"No Improvement Count: {self.no_improvement_count}")
 
         # we want to maximize accuracy, which is equivalent to minimizing -accuracy
         objective_loss = -best_accuracy
         self.check_best_loss(objective_loss, hyperparams, best_state_dict)
 
         return {
-            'loss': loss,
+            'loss': objective_loss,
             'status': STATUS_OK,
             'space': hyperparams,
         }
@@ -199,8 +189,8 @@ class HyperOptManager:
                 json.dump(hyperparams, f)
             with open(f"{self.__checkpoint_dir}/loss.txt", "w") as f:
                 f.write(str(self.best_loss))
-            print(
-                f"Best checkpoint with loss {self.best_loss} and hyperparameters {self.best_hyperparams} saved to {self.__checkpoint_dir}")
+
+            print(f"Best checkpoint with loss {self.best_loss} and hyperparameters {self.best_hyperparams} saved to {self.__checkpoint_dir}")
 
         with open(f"{self.__checkpoint_dir}/trials.pkl", "wb") as f:
             pickle.dump(self.trials, f)
@@ -210,8 +200,7 @@ def main():
     # parse CLI args
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--year", default=2015, type=int, help="The year of the dataset (2015 or 2016)")
-    #default is None
-    parser.add_argument("--val-ont-hops", default= 0, type=int, required=False,
+    parser.add_argument("--val-ont-hops", default=0, type=int, required=False,
                         help="The number of hops to use in the validation phase")
     args = parser.parse_args()
     val_ont_hops: Optional[int] = args.val_ont_hops
