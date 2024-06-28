@@ -78,7 +78,7 @@ class HyperOptManager:
         print(f"Using {train_dataset} with {len(train_dataset)} obs for training")
         train_idx, validation_idx = train_validation_split(train_dataset)
 #Amount of hops used at training
-        ont_hops = 1
+        ont_hops = None
 
         training_subset: Subset
         if ont_hops is not None:
@@ -211,7 +211,7 @@ def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--year", default=2015, type=int, help="The year of the dataset (2015 or 2016)")
     #default is None
-    parser.add_argument("--val-ont-hops", default=None, type=int, required=False,
+    parser.add_argument("--val-ont-hops", default= 0, type=int, required=False,
                         help="The number of hops to use in the validation phase")
     args = parser.parse_args()
     val_ont_hops: Optional[int] = args.val_ont_hops
