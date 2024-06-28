@@ -60,9 +60,9 @@ class HyperOptManager:
             hp.choice('momentum', [0.85, 0.9, 0.95, 0.99]),
             hp.choice('weight_decay', [0.00001, 0.0001, 0.001, 0.01, 0.1]),
             hp.choice('lcr_hops', [3]),
-            hp.quniform('gamma', -1.5, 1.5, 0.1)
+            ## hp.quniform('gamma', -1.5, 1.5, 0.1)
             ##if no knowledge is injected
-            ## hp.choice('gamma', [0]),
+            hp.choice('gamma', [0]),
         ]
 
         best = fmin(self.objective, space=space, algo=tpe.suggest, trials=self.trials, show_progressbar=False)
@@ -203,7 +203,7 @@ def main():
     # parse CLI args
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--year", default=2015, type=int, help="The year of the dataset (2015 or 2016)")
-    parser.add_argument("--val-ont-hops", default=0, type=int, required=False,
+    parser.add_argument("--val-ont-hops", default = None, type=int, required=False,
                         help="The number of hops to use in the validation phase")
     args = parser.parse_args()
     val_ont_hops: Optional[int] = args.val_ont_hops
