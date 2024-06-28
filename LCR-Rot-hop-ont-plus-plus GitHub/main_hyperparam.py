@@ -70,6 +70,7 @@ class HyperOptManager:
     def objective(self, hyperparams):
         self.eval_num += 1
         learning_rate, dropout_rate, momentum, weight_decay, lcr_hops, gamma = hyperparams
+        print(f"\n\nEval {self.eval_num} with hyperparams {hyperparams}")
 
         # create training and validation DataLoader
         train_dataset = EmbeddingsDataset(year=self.year, device=self.device, phase="Train")
