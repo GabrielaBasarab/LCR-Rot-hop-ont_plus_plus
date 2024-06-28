@@ -74,14 +74,14 @@ class HyperOptManager:
 
         # create training and validation DataLoader
         train_dataset = EmbeddingsDataset(year=self.year, device=self.device, phase="Train")
+        print(f"Using {train_dataset} with {len(train_dataset)} obs for training")
         train_idx, validation_idx = train_validation_split(train_dataset)
 
         ont_hops = None
 
         training_subset: Subset
         if ont_hops is not None:
-            train_ont_dataset = EmbeddingsDataset(year=self.year, device=self.device, phase="Train",
-                                                  ont_hops=ont_hops)
+            train_ont_dataset = EmbeddingsDataset(year=self.year, device=self.device, phase="Train", ont_hops=ont_hops)
             training_subset = Subset(train_ont_dataset, train_idx)
             print(f"Using {train_ont_dataset} with {len(training_subset)} obs for training")
         else:
@@ -89,8 +89,7 @@ class HyperOptManager:
 
         validation_subset: Subset
         if self.val_ont_hops is not None:
-            train_val_dataset = EmbeddingsDataset(year=self.year, device=self.device, phase="Train",
-                                                  ont_hops=self.val_ont_hops)
+            train_val_dataset = EmbeddingsDataset(year=self.year, device=self.device, phase="Train", ont_hops=self.val_ont_hops)
             validation_subset = Subset(train_val_dataset, validation_idx)
             print(f"Using {train_val_dataset} with {len(validation_subset)} obs for validation")
         else:
