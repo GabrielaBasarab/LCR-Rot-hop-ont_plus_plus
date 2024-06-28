@@ -80,7 +80,8 @@ class HyperOptManager:
 
         training_subset: Subset
         if ont_hops is not None:
-            train_ont_dataset = EmbeddingsDataset(year=self.year, device=self.device, phase="Train", ont_hops=ont_hops)
+            train_ont_dataset = EmbeddingsDataset(year=self.year, device=self.device, phase="Train",
+                                                  ont_hops=ont_hops)
             training_subset = Subset(train_ont_dataset, train_idx)
             print(f"Using {train_ont_dataset} with {len(training_subset)} obs for training")
         else:
