@@ -61,9 +61,9 @@ class HyperOptManager:
             hp.choice('momentum', [0.85, 0.9, 0.95, 0.99]),
             hp.choice('weight_decay', [0.00001, 0.0001, 0.001, 0.01, 0.1]),
             hp.choice('lcr_hops', [3]), 
-            #hp.quniform('gamma', -1.5, 1.5, 0.1)
+            hp.quniform('gamma', -1.5, 1.5, 0.1)
             #if no knowledge is injected, set gamma to 0.
-            hp.choice('gamma', [0])
+            #hp.choice('gamma', [0])
         ]
 
         best = fmin(self.objective, space=space, algo=tpe.suggest, trials=self.trials, max_evals=self.max_evals, show_progressbar=False)
