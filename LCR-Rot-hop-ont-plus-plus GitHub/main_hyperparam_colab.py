@@ -57,7 +57,7 @@ class HyperOptManager:
     def run(self):
         space = [
             hp.choice('learning_rate', [0.005, 0.001, 0.01, 0.02, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]),
-            hp.quniform('dropout_rate', 0.25, 0.75, 0.1),
+            hp.quniform('dropout_rate', [0.3, 0.4, 0.5, 0.6, 0.7],
             hp.choice('momentum', [0.85, 0.9, 0.95, 0.99]),
             hp.choice('weight_decay', [0.00001, 0.0001, 0.001, 0.01, 0.1]),
             hp.choice('lcr_hops', [3]), 
