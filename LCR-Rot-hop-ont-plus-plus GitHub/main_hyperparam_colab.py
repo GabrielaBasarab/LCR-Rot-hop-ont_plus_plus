@@ -1,4 +1,3 @@
-import argparse
 import json
 import os
 import pickle
@@ -16,11 +15,12 @@ from utils import EmbeddingsDataset, train_validation_split
 class HyperOptManager:
     """A class that performs hyperparameter optimization and stores the best states as checkpoints."""
 
-    def __init__(self, year: int, val_ont_hops: Optional[int], ont_hops: Optional[int], max_evals: int = 150):
+    def __init__(self, year: int, val_ont_hops: Optional[int], ont_hops: Optional[int], patience: int = 30, max_evals: int = 100):
         self.year = year
         self.n_epochs = 20
         self.val_ont_hops = val_ont_hops
         self.ont_hops = ont_hops
+        self.patience = patience
         self.max_evals = max_evals
 
         self.eval_num = 0
@@ -57,18 +57,21 @@ class HyperOptManager:
     def run(self):
         space = [
             hp.choice('learning_rate', [0.005, 0.001, 0.01, 0.02, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]),
-            hp.quniform('dropout_rate', 0.3, 0.7, 0.1),
+            hp.quniform('dropout_rate', 0.25, 0.75, 0.1),
             hp.choice('momentum', [0.85, 0.9, 0.95, 0.99]),
             hp.choice('weight_decay', [0.00001, 0.0001, 0.001, 0.01, 0.1]),
             hp.choice('lcr_hops', [3]), 
             hp.quniform('gamma', -1.5, 1.5, 0.1)
-            #if no knowledge is injected, set gamma to 0.
+            #if no knowledge injection happens then set gamma to 0
             #hp.choice('gamma', [0])
         ]
 
         best = fmin(self.objective, space=space, algo=tpe.suggest, trials=self.trials, max_evals=self.max_evals, show_progressbar=False)
 
     def objective(self, hyperparams):
+        if self.no_improvement_count >= self.patience:
+            return {'status': 'fail'}  # Stop the optimization process
+
         self.eval_num += 1
         learning_rate, dropout_rate, momentum, weight_decay, lcr_hops, gamma = hyperparams
         print(f"\n\nEval {self.eval_num} with hyperparams {hyperparams}")
